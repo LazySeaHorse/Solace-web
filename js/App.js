@@ -5,9 +5,9 @@ import { Navigation } from './components/organisms/Navigation.js';
 import { ChatContainer } from './components/organisms/ChatContainer.js';
 import { SettingsModal } from './components/organisms/SettingsModal.js';
 import { EmotionModal } from './components/organisms/EmotionModal.js';
-import { FAB } from './components/organisms/FAB.js';
 import { InputArea } from './components/molecules/InputArea.js';
 import { JournalEntry } from './components/molecules/JournalEntry.js';
+import { Calendar } from './components/organisms/Calendar.js';
 
 /**
  * Main Application Class
@@ -51,6 +51,7 @@ export class App {
                 this.applyTheme(this.mode);
                 if (this.chatHistory.length === 0) this.setGreeting();
             },
+            onEndConversation: () => this.emotionModal.open(),
             currentMode: this.mode
         });
 
@@ -92,8 +93,8 @@ export class App {
             this.saveSessionToJournal();
         });
 
-        // FAB
-        this.fab = FAB.create(() => this.emotionModal.open());
+        // Calendar
+        this.calendar = new Calendar([], (entry) => this.downloadEntry(entry));
     }
 
     /**
@@ -126,8 +127,9 @@ export class App {
 
         const journalTitle = document.createElement('h2');
         journalTitle.textContent = 'Journal';
-        journalTitle.style.maxWidth = '640px';
-        journalTitle.style.margin = '0 auto 20px';
+        //journalTitle.style.maxWidth = '640px';
+        //journalTitle.style.margin = '0 auto 20px';
+        journalTitle.style.marginBottom = '20px';
 
         const journalList = document.createElement('div');
         journalList.id = 'journal-list';
@@ -153,9 +155,6 @@ export class App {
         // Modals
         app.appendChild(this.settingsModal.element);
         app.appendChild(this.emotionModal.element);
-
-        // FAB
-        app.appendChild(this.fab.element);
     }
 
     /**
@@ -209,10 +208,8 @@ export class App {
 
         if (viewId === 'view-chat') {
             chatControls.classList.remove('hidden');
-            this.fab.show();
         } else {
             chatControls.classList.add('hidden');
-            this.fab.hide();
             if (viewId === 'view-journal') this.loadJournal();
         }
     }
@@ -371,24 +368,16 @@ export class App {
     /**
      * Load journal entries
      */
+    /**
+     * Load journal entries
+     */
     async loadJournal() {
         const list = document.getElementById('journal-list');
         list.innerHTML = '';
         const entries = await this.storage.getEntries();
 
-        if (entries.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:var(--text-secondary); max-width:640px; margin:0 auto;">No entries yet. Start chatting!</div>';
-            return;
-        }
-
-        entries.forEach((entry, i) => {
-            const entryEl = JournalEntry.create(
-                entry,
-                (e) => this.downloadEntry(e),
-                i
-            );
-            list.appendChild(entryEl);
-        });
+        this.calendar.updateEntries(entries);
+        list.appendChild(this.calendar.element);
     }
 
     /**

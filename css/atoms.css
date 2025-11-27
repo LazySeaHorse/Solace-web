@@ -134,22 +134,6 @@
     padding: 6px 10px;
     border-radius: var(--radius-sm);
     display: flex;
-    gap: 4px;
-    font-weight: var(--font-weight-medium);
-    border: 1px solid var(--border-color);
-    transition: all var(--transition-fast);
-}
-
-.btn-export:hover {
-    background: var(--primary-light);
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-/* Inputs */
-.form-input {
-    width: 100%;
-    padding: 12px 14px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: var(--bg-color);
@@ -157,6 +141,43 @@
     font-family: inherit;
     font-size: var(--font-size-lg);
     transition: all var(--transition-fast);
+}
+
+.btn-text {
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    padding: 8px 0;
+    /* Reduced padding since it's text-like */
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    /* Changed to inline-flex */
+    align-items: center;
+    gap: 8px;
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-fast);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-text:hover {
+    color: var(--primary-color);
+    transform: translateX(-2px);
+    /* Subtle slide effect */
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    outline: none;
+    transition: all var(--transition-fast);
+    font-family: inherit;
 }
 
 .form-input:focus {

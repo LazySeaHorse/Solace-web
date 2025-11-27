@@ -38,7 +38,23 @@ export class Icon {
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             `,
-            download: '⬇'
+            download: '⬇',
+            arrowLeft: `
+                <svg class="${className}" viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            `,
+            arrowRight: `
+                <svg class="${className}" viewBox="0 0 24 24">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            `,
+            close: `
+                <svg class="${className}" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            `
         };
 
         return icons[type] || '';

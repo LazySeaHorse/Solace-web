@@ -396,9 +396,11 @@
     margin-bottom: var(--spacing-md);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
-    max-width: 640px;
-    margin-left: auto;
-    margin-right: auto;
+
+    /* Changed: Set width to 100% and remove max-width/margins */
+    width: 100%;
+    max-width: none;
+
     transition: all var(--transition-base);
     opacity: 0;
     animation: fadeInEntry 0.4s ease forwards;

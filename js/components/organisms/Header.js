@@ -14,7 +14,7 @@ export class Header {
      * @param {string} options.currentMode - Current mode value
      * @returns {HTMLElement}
      */
-    static create({ onSettingsClick, onModeChange, currentMode = 'default' }) {
+    static create({ onSettingsClick, onModeChange, onEndConversation, currentMode = 'default' }) {
         const header = document.createElement('header');
 
         // Logo
@@ -38,6 +38,15 @@ export class Header {
             onChange: onModeChange
         });
 
+        // NEW: End Conversation Button (Tick icon)
+        const endConvBtn = Button.icon(
+            Icon.render('check'),
+            onEndConversation,
+            'end-conv-btn',
+            'settings-btn' // Re-using settings-btn class for consistent styling
+        );
+        // Add a small margin if needed, or rely on flex gap in CSS
+
         // Settings button
         const settingsBtn = Button.icon(
             Icon.render('settings'),
@@ -47,6 +56,7 @@ export class Header {
         );
 
         controls.appendChild(modeSelect);
+        controls.appendChild(endConvBtn); // Add the new button
         controls.appendChild(settingsBtn);
 
         header.appendChild(logo);
