@@ -4,16 +4,28 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html {
+    height: 100%;
+    overflow: hidden;
+    /* Prevents the whole page from scrolling */
+}
+
 body {
     margin: 0;
     font-family: var(--font-family);
     background-color: var(--bg-color);
     color: var(--text-primary);
-    height: 100vh;
+    /* CHANGE: Use 100% instead of 100vh to avoid jumpy URL bars */
+    height: 100%;
+    width: 100%;
+    /* Ensure full width */
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    /* Double lock to prevent body scroll */
     -webkit-font-smoothing: antialiased;
+    /* ADD: Prevent pull-to-refresh effects */
+    overscroll-behavior: none;
 }
 
 h1,
