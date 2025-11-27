@@ -1,0 +1,208 @@
+/* Atom Components */
+
+/* Icon */
+.icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    transition: all var(--transition-fast);
+}
+
+/* Buttons */
+.btn {
+    font-family: var(--font-family);
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all var(--transition-fast);
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
+}
+
+.btn-primary:hover {
+    background: var(--accent-blue);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    margin-top: var(--spacing-sm);
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-color);
+    color: var(--text-primary);
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.btn-icon:active {
+    transform: scale(0.95);
+}
+
+.btn-icon.settings-btn:hover .icon {
+    transform: rotate(90deg);
+}
+
+.btn-send {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-send:hover {
+    background: var(--accent-blue);
+    transform: scale(1.05);
+}
+
+.btn-send:active {
+    transform: scale(0.95);
+}
+
+.btn-emotion {
+    padding: 18px;
+    background: var(--bg-color);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 2rem;
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.btn-emotion:hover {
+    transform: scale(1.05);
+    border-color: var(--text-secondary);
+}
+
+.btn-emotion:active {
+    transform: scale(0.95);
+}
+
+.btn-emotion.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    transform: scale(1.05);
+}
+
+.btn-export {
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    gap: 4px;
+    font-weight: var(--font-weight-medium);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
+}
+
+.btn-export:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Inputs */
+.form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--font-size-lg);
+    transition: all var(--transition-fast);
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.text-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 14px;
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
+    outline: none;
+    font-family: inherit;
+}
+
+.text-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.select-input {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-family: inherit;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.select-input:hover {
+    border-color: var(--primary-color);
+}

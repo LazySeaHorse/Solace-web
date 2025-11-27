@@ -1,0 +1,182 @@
+/* Organism Components */
+
+/* App Container */
+#app {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Header */
+header {
+    padding: var(--spacing-xl) var(--spacing-2xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface-color);
+    z-index: 10;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+/* Main Content Area */
+main {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+.view {
+    display: none;
+    padding: var(--spacing-2xl);
+    padding-bottom: 120px;
+}
+
+.view.active {
+    display: block;
+    animation: fadeInView var(--transition-base);
+}
+
+/* Chat Container */
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+/* Chat Controls */
+.chat-controls {
+    position: fixed;
+    bottom: calc(70px + var(--safe-area-bottom));
+    left: 0;
+    right: 0;
+    padding: var(--spacing-lg) var(--spacing-2xl);
+    background: linear-gradient(to top, var(--bg-color) 90%, transparent);
+    z-index: 5;
+}
+
+.suggestion-chips {
+    display: flex;
+    gap: var(--spacing-sm);
+    overflow-x: auto;
+    padding-bottom: var(--spacing-md);
+    scrollbar-width: none;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.suggestion-chips::-webkit-scrollbar {
+    display: none;
+}
+
+/* Navigation */
+nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(64px + var(--safe-area-bottom));
+    background: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    padding-bottom: var(--safe-area-bottom);
+    z-index: 10;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+}
+
+.modal.open {
+    display: flex;
+    animation: fadeInModal 0.2s ease;
+}
+
+.modal-content {
+    background: var(--surface-color);
+    width: 100%;
+    max-width: 400px;
+    padding: var(--spacing-3xl);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    animation: scaleIn var(--transition-base);
+}
+
+.modal-content h3 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+/* Emotion Grid */
+.emotion-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: var(--spacing-xl);
+}
+
+/* Floating Action Button (FAB) */
+.fab {
+    position: fixed;
+    bottom: calc(84px + var(--safe-area-bottom));
+    right: var(--spacing-2xl);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    z-index: 9;
+    animation: pulse 2s ease-in-out infinite;
+    border: none;
+    cursor: pointer;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    background: var(--accent-blue);
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+.fab .icon {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2.5;
+}
+
+/* Journal List */
+#journal-list {
+    margin-top: var(--spacing-md);
+}

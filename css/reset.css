@@ -1,0 +1,43 @@
+/* Reset & Base Styles */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+    font-family: var(--font-family);
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.02em;
+}
+
+button {
+    font-family: var(--font-family);
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+input,
+select {
+    font-family: var(--font-family);
+}
+
+.hidden {
+    display: none !important;
+}
