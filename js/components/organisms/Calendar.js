@@ -6,9 +6,10 @@ import { DayEntryList } from '../molecules/DayEntryList.js';
  * Calendar Organism - Main calendar widget
  */
 export class Calendar {
-    constructor(entries, onExport) {
+    constructor(entries, onEntryClick) {
         this.entries = entries;
-        this.onExport = onExport;
+        this.onEntryClick = onEntryClick;
+        // this.onExport = onExport; // Remove this line
         this.currentDate = new Date();
         this.selectedDate = null;
         this.view = 'calendar'; // 'calendar' or 'day'
@@ -86,9 +87,8 @@ export class Calendar {
                 this.view = 'calendar';
                 this.render();
             },
-            onExport: this.onExport
+            onEntryClick: this.onEntryClick // Changed
         });
-
         this.element.appendChild(dayView);
     }
 }

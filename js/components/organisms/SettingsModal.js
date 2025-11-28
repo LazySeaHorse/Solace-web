@@ -154,6 +154,51 @@ export class SettingsModal {
             }
         });
 
+        // --- Data Management Section ---
+        const dataTitle = document.createElement('h4');
+        dataTitle.textContent = 'Data Management';
+        dataTitle.style.marginTop = '20px';
+        dataTitle.style.marginBottom = '10px';
+        content.appendChild(dataTitle);
+
+        const dataControls = document.createElement('div');
+        dataControls.style.display = 'flex';
+        dataControls.style.gap = '10px';
+        dataControls.style.marginBottom = '20px';
+
+        // Export All
+        const exportAllBtn = Button.secondary('Export Backup', () => {
+            // Dispatch event for App to handle
+            const event = new CustomEvent('request-export-all');
+            window.dispatchEvent(event);
+        });
+
+        // Import
+        const importInput = document.createElement('input');
+        importInput.type = 'file';
+        importInput.accept = '.json';
+        importInput.style.display = 'none';
+        importInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const event = new CustomEvent('request-import', { detail: { file } });
+                window.dispatchEvent(event);
+            }
+            // Reset input
+            importInput.value = '';
+        };
+
+        const importBtn = Button.secondary('Import Backup', () => {
+            if (confirm('Importing will add entries to your existing journal. Continue?')) {
+                importInput.click();
+            }
+        });
+
+        dataControls.appendChild(exportAllBtn);
+        dataControls.appendChild(importBtn);
+        dataControls.appendChild(importInput);
+        content.appendChild(dataControls);
+
         // Save button
         const saveBtn = Button.primary('Save', () => {
             const apiKey = apiKeyInput.value.trim();

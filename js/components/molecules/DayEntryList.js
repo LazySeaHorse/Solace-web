@@ -12,10 +12,10 @@ export class DayEntryList {
      * @param {Date} props.date - Selected date
      * @param {Array} props.entries - Entries for this day
      * @param {Function} props.onBack - Back button handler
-     * @param {Function} props.onExport - Export handler
+     * @param {Function} props.onEntryClick - Entry click handler
      * @returns {HTMLElement}
      */
-    static create({ date, entries, onBack, onExport }) {
+    static create({ date, entries, onBack, onEntryClick }) { // Changed onExport to onEntryClick
         const container = document.createElement('div');
         container.className = 'day-entry-list';
 
@@ -46,7 +46,8 @@ export class DayEntryList {
             list.appendChild(empty);
         } else {
             entries.forEach((entry, index) => {
-                const entryEl = JournalEntry.create(entry, onExport, index);
+                // Pass onEntryClick instead of onExport
+                const entryEl = JournalEntry.create(entry, onEntryClick, index);
                 list.appendChild(entryEl);
             });
         }

@@ -8,6 +8,7 @@ import { EmotionModal } from './components/organisms/EmotionModal.js';
 import { InputArea } from './components/molecules/InputArea.js';
 import { JournalEntry } from './components/molecules/JournalEntry.js';
 import { Calendar } from './components/organisms/Calendar.js';
+import { EntryDetailModal } from './components/organisms/EntryDetailModal.js';
 
 /**
  * Main Application Class
@@ -93,8 +94,29 @@ export class App {
             this.saveSessionToJournal();
         });
 
-        // Calendar
-        this.calendar = new Calendar([], (entry) => this.downloadEntry(entry));
+
+        // NEW: Entry Detail Modal
+        this.entryDetailModal = EntryDetailModal.create({
+            onUpdate: async (updatedEntry) => {
+                await this.storage.updateEntry(updatedEntry);
+                await this.loadJournal(); // Refresh list
+                this.entryDetailModal.close();
+            },
+            onDelete: async (id) => {
+                await this.storage.deleteEntry(id);
+                await this.loadJournal(); // Refresh list
+                this.entryDetailModal.close();
+            },
+            onExport: (entry) => this.downloadEntry(entry),
+            onClose: () => this.entryDetailModal.close()
+        });
+
+        // Calendar - Update to use openEntryDetail
+        this.calendar = new Calendar([], (entry) => this.entryDetailModal.open(entry));
+
+        // Global Event Listeners for Settings Import/Export
+        window.addEventListener('request-export-all', () => this.exportAllEntries());
+        window.addEventListener('request-import', (e) => this.importEntries(e.detail.file));
     }
 
     /**
@@ -155,6 +177,7 @@ export class App {
         // Modals
         app.appendChild(this.settingsModal.element);
         app.appendChild(this.emotionModal.element);
+        app.appendChild(this.entryDetailModal.element);
     }
 
     /**
@@ -412,5 +435,43 @@ export class App {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    /**
+ * Export all entries as JSON
+ */
+    async exportAllEntries() {
+        const entries = await this.storage.getEntries();
+        const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `solace-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Import entries from JSON file
+     * @param {File} file 
+     */
+    async importEntries(file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const entries = JSON.parse(e.target.result);
+                if (!Array.isArray(entries)) throw new Error('Invalid backup file');
+
+                const result = await this.storage.importEntries(entries);
+                alert(`Imported ${result.completed} entries.`);
+                await this.loadJournal();
+                this.settingsModal.close();
+            } catch (error) {
+                alert('Failed to import: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
     }
 }
