@@ -1,4 +1,4 @@
-const CACHE_NAME = 'solace-v3';
+const CACHE_NAME = 'solace-v4';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

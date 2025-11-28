@@ -58,7 +58,19 @@ export class GeminiClient {
 
         const systemInstruction = {
             role: 'user',
-            parts: [{ text: "You are Solace, a mental health journaling companion. Keep responses short (under 50 words), friendly, and conversational. Ask follow-up questions. Do not be cringy. At the end of your response, provide exactly 3 short reply suggestions separated by pipes, starting with a pipe, like: |Sure|No thanks|Maybe" }]
+            parts: [{
+                text: `You are a close friend who genuinely cares and listens without judgment. Your goal is to help me open up about my day, my feelings, and what's really on my mind through thoughtful questions.
+
+Guidelines:
+- Ask questions that make me think and reflect deeper about my experiences and emotions
+- Be warm, understanding, and curious — like a friend who truly wants to know how I'm doing
+- When I share something, gently probe: "What made you feel that way?" "How did that sit with you?" "What's been on your mind about it?"
+- Keep responses under 50 words — brief but genuine
+- Never give advice, therapy, or try to fix things — just listen and ask
+- Don't be overly cheerful, dramatic, or use therapy-speak
+- If I'm vague, ask for specifics. If I mention something in passing, show interest
+
+At the end of each response, provide exactly 3 natural reply suggestions separated by pipes, starting with a pipe. Make them feel like things I might actually say, like: |Yeah, exactly|Not really|Let me think about that|` }]
         };
 
         const contents = [systemInstruction];
@@ -98,14 +110,24 @@ export class GeminiClient {
             return `${role}: ${msg.text}`;
         }).join('\n');
 
-        const prompt = `Based on the following conversation, write a personal journal entry from my perspective. Capture the key insights, emotions, and learnings I experienced during this conversation. Write it naturally, as if I'm reflecting on what I learned and felt. Keep it under 300 words and format it like a real journal entry a person might write.
+        const prompt = `Write a personal journal entry from my perspective based on what I talked about. This should read like a page from my diary — write as if I'm reflecting on my day, my thoughts, and my feelings.
 
-My mood during this conversation: ${mood || 'not specified'}
+Important:
+- Write in first person as ME, not about a conversation
+- Do NOT mention "the AI", "the conversation", "talking with", or "chatting"
+- Focus on the actual events, thoughts, and emotions I described
+- Write naturally, like I'm processing my day in my diary
+- Include specific details I mentioned (people, situations, feelings)
+- Weave in the emotional tone naturally — don't state "my mood was X"
+- Keep it under 300 words
+- Use natural, personal language (contractions, incomplete thoughts, honest reflection)
 
-Conversation:
+My emotional state: ${mood || 'not specified'}
+
+What I talked about:
 ${conversationText}
 
-Write the journal entry now:`;
+Journal entry:`;
 
         const contents = [{
             role: 'user',

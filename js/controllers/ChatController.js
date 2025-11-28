@@ -63,11 +63,37 @@ export class ChatController {
             let response = await this.gemini.generateContent(model, text, this.chatHistory);
 
             let suggestions = [];
+            // Parse suggestions (looking for | at the end)
             if (response.includes('|')) {
                 const parts = response.split('|');
-                if (parts.length >= 4) {
-                    response = parts.slice(0, parts.length - 3).join('|').trim();
-                    suggestions = parts.slice(-3).map(s => s.trim()).filter(s => s);
+                if (parts.length > 1) {
+                    const potentialSuggestions = [];
+                    let messageParts = [...parts];
+
+                    // Work backwards to find up to 3 short suggestions
+                    // We check more parts because there might be empty strings from trailing pipes
+                    while (messageParts.length > 1 && potentialSuggestions.length < 3) {
+                        const lastPart = messageParts[messageParts.length - 1].trim();
+
+                        // If it's an empty string (e.g. trailing pipe), just pop it and continue
+                        if (lastPart.length === 0) {
+                            messageParts.pop();
+                            continue;
+                        }
+
+                        // Heuristic: Suggestions are usually short (e.g. < 60 chars)
+                        if (lastPart.length < 60) {
+                            potentialSuggestions.unshift(lastPart);
+                            messageParts.pop();
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (potentialSuggestions.length > 0) {
+                        response = messageParts.join('|').trim();
+                        suggestions = potentialSuggestions;
+                    }
                 }
             }
 
