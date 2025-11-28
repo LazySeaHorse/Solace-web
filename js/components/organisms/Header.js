@@ -14,7 +14,7 @@ export class Header {
      * @param {string} options.currentMode - Current mode value
      * @returns {HTMLElement}
      */
-    static create({ onSettingsClick, onModeChange, onEndConversation, currentMode = 'default' }) {
+    static create({ onSettingsClick, onModeChange, onEndConversation, onThemeToggle, currentMode = 'default', currentTheme = 'light' }) {
         const header = document.createElement('header');
 
         // Logo
@@ -47,6 +47,15 @@ export class Header {
         );
         // Add a small margin if needed, or rely on flex gap in CSS
 
+        // Theme Toggle Button
+        const themeIcon = currentTheme === 'dark' ? 'sun' : 'moon';
+        const themeBtn = Button.icon(
+            Icon.render(themeIcon),
+            onThemeToggle,
+            'theme-btn',
+            'settings-btn'
+        );
+
         // Settings button
         const settingsBtn = Button.icon(
             Icon.render('settings'),
@@ -57,6 +66,7 @@ export class Header {
 
         controls.appendChild(modeSelect);
         controls.appendChild(endConvBtn); // Add the new button
+        controls.appendChild(themeBtn); // Add the theme toggle button
         controls.appendChild(settingsBtn);
 
         header.appendChild(logo);

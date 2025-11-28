@@ -29,8 +29,17 @@ export class Navigation {
             onClick: onNavigate
         });
 
+        const insightsItem = NavItem.create({
+            label: 'Insights',
+            icon: 'chart',
+            target: 'view-insights',
+            active: activeView === 'view-insights',
+            onClick: onNavigate
+        });
+
         nav.appendChild(chatItem);
         nav.appendChild(journalItem);
+        nav.appendChild(insightsItem);
 
         return nav;
     }

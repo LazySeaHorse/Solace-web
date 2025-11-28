@@ -1,25 +1,63 @@
 import { StorageManager } from './services/StorageManager.js';
 import { GeminiClient } from './services/GeminiClient.js';
+import { ThemeManager } from './services/ThemeManager.js';
+import { Router } from './services/Router.js';
+
+import { ChatController } from './controllers/ChatController.js';
+import { JournalController } from './controllers/JournalController.js';
+
+import { ChatView } from './views/ChatView.js';
+import { JournalView } from './views/JournalView.js';
+import { InsightsView } from './views/InsightsView.js';
+
 import { Header } from './components/organisms/Header.js';
 import { Navigation } from './components/organisms/Navigation.js';
-import { ChatContainer } from './components/organisms/ChatContainer.js';
 import { SettingsModal } from './components/organisms/SettingsModal.js';
 import { EmotionModal } from './components/organisms/EmotionModal.js';
-import { InputArea } from './components/molecules/InputArea.js';
-import { JournalEntry } from './components/molecules/JournalEntry.js';
-import { Calendar } from './components/organisms/Calendar.js';
-import { EntryDetailModal } from './components/organisms/EntryDetailModal.js';
 
 /**
  * Main Application Class
+ * Acts as the Coordinator/Root
  */
 export class App {
     constructor() {
+        // 1. Initialize Services
         this.storage = new StorageManager();
         this.gemini = new GeminiClient(this.storage.getSetting('gemini_api_key'));
-        this.chatHistory = [];
-        this.currentMood = null;
-        this.mode = 'default';
+        this.themeManager = new ThemeManager(this.storage);
+        this.router = new Router((viewId) => this.handleViewChange(viewId));
+
+        // 2. Initialize Views
+        this.chatView = new ChatView((text) => this.chatController.handleSendMessage(text));
+
+        this.journalView = new JournalView({
+            onSearch: (query) => this.journalController.filterJournal(query),
+            onClear: () => this.journalController.clearSearch(),
+            onEntryUpdate: (entry) => this.journalController.updateEntry(entry),
+            onEntryDelete: (id) => this.journalController.deleteEntry(id),
+            onEntryExport: (entry) => this.journalController.exportEntry(entry),
+            getFilteredEntries: () => this.journalController.filteredEntries
+        });
+
+        this.insightsView = new InsightsView(() => this.storage.getEntries());
+
+        // 3. Initialize Controllers
+        this.chatController = new ChatController(
+            this.chatView,
+            this.gemini,
+            this.storage,
+            this.themeManager,
+            () => this.router.navigateTo('view-journal') // On journal entry created
+        );
+
+        this.journalController = new JournalController(
+            this.journalView,
+            this.storage
+        );
+
+        // 4. Initialize Global UI Components
+        this.settingsModal = this.createSettingsModal();
+        this.emotionModal = this.createEmotionModal();
 
         this.initializeApp();
     }
@@ -28,49 +66,26 @@ export class App {
      * Initialize the application
      */
     async initializeApp() {
-        // Create UI components
-        this.createComponents();
-
-        // Render initial UI
         this.renderApp();
-
-        // Check setup and load data
         this.checkSetup();
-        await this.loadJournal();
-        this.setGreeting();
+
+        // Initial data load
+        this.chatController.initialize();
+        await this.journalController.loadEntries();
+
+        // Setup global event listeners
+        window.addEventListener('request-export-all', () => this.journalController.exportAll());
+        window.addEventListener('request-import', (e) => {
+            this.journalController.importEntries(e.detail.file);
+            this.settingsModal.close();
+        });
     }
 
     /**
-     * Create all UI components
+     * Create Settings Modal
      */
-    createComponents() {
-        // Header
-        this.header = Header.create({
-            onSettingsClick: () => this.settingsModal.open(),
-            onModeChange: (e) => {
-                this.mode = e.target.value;
-                this.applyTheme(this.mode);
-                if (this.chatHistory.length === 0) this.setGreeting();
-            },
-            onEndConversation: () => this.emotionModal.open(),
-            currentMode: this.mode
-        });
-
-        // Navigation
-        this.navigation = Navigation.create(
-            (target) => this.switchView(target),
-            'view-chat'
-        );
-
-        // Chat components
-        this.chatContainer = ChatContainer.create();
-        this.suggestionsContainer = ChatContainer.createSuggestionsContainer(
-            (text) => this.handleSendMessage(text)
-        );
-        this.inputArea = InputArea.create(() => this.handleSendMessage());
-
-        // Modals
-        this.settingsModal = SettingsModal.create({
+    createSettingsModal() {
+        return SettingsModal.create({
             onSave: ({ apiKey, model }) => {
                 this.storage.setSetting('gemini_api_key', apiKey);
                 this.storage.setSetting('gemini_model', model);
@@ -79,7 +94,6 @@ export class App {
             },
             onClose: () => this.settingsModal.close(),
             onFetchModels: async (apiKey) => {
-                // Create a temporary client to fetch models
                 const tempClient = new GeminiClient(apiKey);
                 return await tempClient.listAvailableModels();
             },
@@ -88,152 +102,108 @@ export class App {
                 model: this.storage.getSetting('gemini_model') || ''
             }
         });
-
-        this.emotionModal = EmotionModal.create((mood) => {
-            this.currentMood = mood;
-            this.saveSessionToJournal();
-        });
-
-
-        // NEW: Entry Detail Modal
-        this.entryDetailModal = EntryDetailModal.create({
-            onUpdate: async (updatedEntry) => {
-                await this.storage.updateEntry(updatedEntry);
-                await this.loadJournal(); // Refresh list
-                this.entryDetailModal.close();
-            },
-            onDelete: async (id) => {
-                await this.storage.deleteEntry(id);
-                await this.loadJournal(); // Refresh list
-                this.entryDetailModal.close();
-            },
-            onExport: (entry) => this.downloadEntry(entry),
-            onClose: () => this.entryDetailModal.close()
-        });
-
-        // Calendar - Update to use openEntryDetail
-        this.calendar = new Calendar([], (entry) => this.entryDetailModal.open(entry));
-
-        // Global Event Listeners for Settings Import/Export
-        window.addEventListener('request-export-all', () => this.exportAllEntries());
-        window.addEventListener('request-import', (e) => this.importEntries(e.detail.file));
     }
 
     /**
-     * Render the app to the DOM
+     * Create Emotion Modal
+     */
+    createEmotionModal() {
+        return EmotionModal.create((mood) => {
+            this.emotionModal.close();
+            this.chatController.endConversation(mood);
+        });
+    }
+
+    /**
+     * Render the app structure
      */
     renderApp() {
         const app = document.getElementById('app');
         app.innerHTML = '';
 
-        // Append header
+        // Header
+        this.renderHeader();
         app.appendChild(this.header);
 
-        // Create main content area
+        // Main Content
         const main = document.createElement('main');
 
-        // Chat view
-        const chatView = document.createElement('div');
-        chatView.id = 'view-chat';
-        chatView.className = 'view active';
-        chatView.appendChild(this.chatContainer.element);
+        // Append Views
+        main.appendChild(this.chatView.render());
+        main.appendChild(this.journalView.render());
+        main.appendChild(this.insightsView.render());
 
-        const spacer = document.createElement('div');
-        spacer.style.height = '140px';
-        chatView.appendChild(spacer);
-
-        // Journal view
-        const journalView = document.createElement('div');
-        journalView.id = 'view-journal';
-        journalView.className = 'view';
-
-        const journalTitle = document.createElement('h2');
-        journalTitle.textContent = 'Journal';
-        //journalTitle.style.maxWidth = '640px';
-        //journalTitle.style.margin = '0 auto 20px';
-        journalTitle.style.marginBottom = '20px';
-
-        const journalList = document.createElement('div');
-        journalList.id = 'journal-list';
-
-        journalView.appendChild(journalTitle);
-        journalView.appendChild(journalList);
-
-        main.appendChild(chatView);
-        main.appendChild(journalView);
         app.appendChild(main);
 
-        // Chat controls
-        const chatControls = document.createElement('div');
-        chatControls.className = 'chat-controls';
-        chatControls.id = 'chat-controls';
-        chatControls.appendChild(this.suggestionsContainer.element);
-        chatControls.appendChild(this.inputArea);
-        app.appendChild(chatControls);
+        // Chat Controls (Input area)
+        app.appendChild(this.chatView.getControls());
 
         // Navigation
+        this.navigation = Navigation.create(
+            (target) => this.router.navigateTo(target),
+            'view-chat'
+        );
         app.appendChild(this.navigation);
 
         // Modals
         app.appendChild(this.settingsModal.element);
         app.appendChild(this.emotionModal.element);
-        app.appendChild(this.entryDetailModal.element);
+        // Note: JournalView manages its own EntryDetailModal, but we need to ensure it's in the DOM
+        // The JournalView.render() doesn't append the modal to itself to avoid z-index issues relative to other views?
+        // Actually, modals usually sit at the root.
+        // Let's append the JournalView's modal here.
+        app.appendChild(this.journalView.getModalElement());
     }
 
     /**
-     * Apply theme based on mode
-     * @param {string} mode - Mode name
+     * Render or Re-render Header
      */
-    applyTheme(mode) {
-        const root = document.documentElement;
-        if (mode === 'gratitude') {
-            root.style.setProperty('--primary-color', 'var(--mode-gratitude)');
-        } else if (mode === 'reflection') {
-            root.style.setProperty('--primary-color', 'var(--mode-reflection)');
-        } else {
-            root.style.setProperty('--primary-color', '#7c3aed');
+    renderHeader() {
+        const newHeader = Header.create({
+            onSettingsClick: () => this.settingsModal.open(),
+            onModeChange: (e) => {
+                const mode = e.target.value;
+                this.themeManager.applyMode(mode);
+                this.chatController.setGreeting();
+            },
+            onEndConversation: () => this.emotionModal.open(),
+            onThemeToggle: () => {
+                this.themeManager.toggleTheme();
+                this.renderHeader(); // Re-render to update icon
+            },
+            currentMode: this.themeManager.getMode(),
+            currentTheme: this.themeManager.getTheme()
+        });
+
+        if (this.header && this.header.parentNode) {
+            this.header.replaceWith(newHeader);
         }
+        this.header = newHeader;
     }
 
     /**
-     * Set greeting message based on time and mode
+     * Handle View Changes
      */
-    setGreeting() {
-        const hour = new Date().getHours();
-        let greeting = "Hi there.";
-
-        if (hour < 12) greeting = "Good morning.";
-        else if (hour < 18) greeting = "Good afternoon.";
-        else greeting = "Good evening.";
-
-        if (this.mode === 'gratitude') greeting += " What are you grateful for today?";
-        else if (this.mode === 'reflection') greeting += " What's on your mind?";
-        else greeting += " How was your day?";
-
-        this.chatContainer.clear();
-        this.chatContainer.addMessage(greeting, 'ai');
-        this.chatHistory = [{ role: 'ai', text: greeting }];
-    }
-
-    /**
-     * Switch between views
-     * @param {string} viewId - View ID to switch to
-     */
-    switchView(viewId) {
-        // Update views
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-        document.getElementById(viewId).classList.add('active');
-        document.querySelector(`.nav-item[data-target="${viewId}"]`).classList.add('active');
-
+    handleViewChange(viewId) {
         const chatControls = document.getElementById('chat-controls');
 
         if (viewId === 'view-chat') {
             chatControls.classList.remove('hidden');
         } else {
             chatControls.classList.add('hidden');
-            if (viewId === 'view-journal') this.loadJournal();
+            if (viewId === 'view-journal') {
+                this.journalController.loadEntries();
+                this.journalController.clearSearch();
+                // We need to clear the search input in the view manually or via controller
+                // The controller.clearSearch() does it logic-wise, but we might need to reset UI
+                // The JournalView re-renders or we can just access the input if needed.
+                // For now, JournalController.clearSearch() reloads entries.
+                // We might want to reset the input value in the DOM.
+                const searchInput = document.getElementById('journal-search');
+                if (searchInput) searchInput.value = '';
+            } else if (viewId === 'view-insights') {
+                this.insightsView.refresh();
+            }
         }
     }
 
@@ -246,232 +216,5 @@ export class App {
                 this.settingsModal.open();
             }, 500);
         }
-    }
-
-    /**
-     * Handle sending a message
-     * @param {string} textOverride - Optional text to send (for chips)
-     */
-    async handleSendMessage(textOverride = null) {
-        const input = document.getElementById('chat-input');
-        const text = textOverride || input.value.trim();
-        if (!text) return;
-
-        this.suggestionsContainer.clear();
-        this.chatContainer.addMessage(text, 'user');
-        this.chatHistory.push({ role: 'user', text });
-        input.value = '';
-
-        try {
-            const model = this.storage.getSetting('gemini_model') || 'gemini-flash-latest';
-            const loadingId = this.chatContainer.addTypingIndicator();
-
-            let response = await this.gemini.generateContent(model, text, this.chatHistory);
-
-            let suggestions = [];
-            if (response.includes('|')) {
-                const parts = response.split('|');
-                if (parts.length >= 4) {
-                    response = parts.slice(0, parts.length - 3).join('|').trim();
-                    suggestions = parts.slice(-3).map(s => s.trim()).filter(s => s);
-                }
-            }
-
-            this.chatContainer.removeElement(loadingId);
-            this.chatContainer.addMessage(response, 'ai');
-            this.chatHistory.push({ role: 'ai', text: response });
-
-            this.suggestionsContainer.setSuggestions(suggestions);
-
-        } catch (error) {
-            this.chatContainer.addMessage("Error: " + error.message, 'ai');
-        }
-    }
-
-    /**
-     * Save current chat session to journal
-     */
-    async saveSessionToJournal() {
-        if (this.chatHistory.length <= 1) return;
-
-        // Close emotion modal
-        this.emotionModal.close();
-
-        // Show loading indicator in chat
-        const loadingId = this.chatContainer.addTypingIndicator();
-        this.chatContainer.addMessage('Generating your journal entry...', 'ai');
-
-        try {
-            const model = this.storage.getSetting('gemini_model') || 'gemini-flash-latest';
-
-            // Generate AI summary
-            const summary = await this.gemini.generateJournalSummary(
-                this.chatHistory,
-                this.currentMood,
-                model
-            );
-
-            // Remove loading indicator
-            this.chatContainer.removeElement(loadingId);
-
-            // Save entry with AI-generated summary (no raw content)
-            const entry = {
-                date: new Date().toISOString(),
-                summary: summary,
-                mood: this.currentMood
-            };
-
-            await this.storage.addEntry(entry);
-
-            // Clear chat and show success
-            this.chatHistory = [];
-            this.setGreeting();
-            this.switchView('view-journal');
-
-        } catch (error) {
-            // Remove loading indicator
-            this.chatContainer.removeElement(loadingId);
-
-            // Show error message and ask for confirmation
-            const errorMsg = `Failed to generate journal summary: ${error.message}\n\nWould you like to save the raw conversation instead?`;
-            this.chatContainer.addMessage(errorMsg, 'ai');
-
-            // Create confirmation buttons
-            const confirmContainer = document.createElement('div');
-            confirmContainer.className = 'confirmation-buttons';
-            confirmContainer.style.cssText = 'display: flex; gap: 10px; margin-top: 10px; justify-content: center;';
-
-            const saveRawBtn = document.createElement('button');
-            saveRawBtn.textContent = 'Save Raw Conversation';
-            saveRawBtn.className = 'btn btn-primary';
-            saveRawBtn.style.cssText = 'padding: 10px 20px; border-radius: 8px; border: none; background: var(--primary-color); color: white; cursor: pointer;';
-            saveRawBtn.onclick = async () => {
-                await this.saveRawConversation();
-                confirmContainer.remove();
-            };
-
-            const cancelBtn = document.createElement('button');
-            cancelBtn.textContent = 'Cancel';
-            cancelBtn.className = 'btn btn-secondary';
-            cancelBtn.style.cssText = 'padding: 10px 20px; border-radius: 8px; border: none; background: var(--surface); color: var(--text-primary); cursor: pointer;';
-            cancelBtn.onclick = () => {
-                confirmContainer.remove();
-                // Don't clear chat history on cancel
-            };
-
-            confirmContainer.appendChild(saveRawBtn);
-            confirmContainer.appendChild(cancelBtn);
-
-            // Add buttons to chat container
-            this.chatContainer.element.appendChild(confirmContainer);
-        }
-    }
-
-    /**
-     * Save raw conversation as fallback
-     */
-    async saveRawConversation() {
-        const entry = {
-            date: new Date().toISOString(),
-            content: this.chatHistory,
-            mood: this.currentMood,
-            summary: this.chatHistory
-                .filter(m => m.role === 'user')
-                .map(m => m.text)
-                .join(' ')
-                .substring(0, 200) + '...'
-        };
-
-        await this.storage.addEntry(entry);
-        this.chatHistory = [];
-        this.setGreeting();
-        this.switchView('view-journal');
-    }
-
-    /**
-     * Load journal entries
-     */
-    /**
-     * Load journal entries
-     */
-    async loadJournal() {
-        const list = document.getElementById('journal-list');
-        list.innerHTML = '';
-        const entries = await this.storage.getEntries();
-
-        this.calendar.updateEntries(entries);
-        list.appendChild(this.calendar.element);
-    }
-
-    /**
-     * Download a journal entry as markdown
-     * @param {Object} entry - Journal entry
-     */
-    downloadEntry(entry) {
-        const dateStr = new Date(entry.date).toISOString().split('T')[0];
-        let md = `# Journal Entry - ${dateStr}\n\n`;
-        md += `**Mood:** ${entry.mood || 'N/A'}\n\n`;
-
-        // Check if entry has AI summary or raw content
-        if (entry.content) {
-            // Legacy format with raw conversation
-            md += `## Conversation\n\n`;
-            entry.content.forEach(msg => {
-                const role = msg.role === 'ai' ? 'Solace' : 'Me';
-                md += `**${role}:** ${msg.text}\n\n`;
-            });
-        } else {
-            // New format with AI-generated summary
-            md += `## Reflection\n\n`;
-            md += entry.summary + '\n\n';
-        }
-
-        const blob = new Blob([md], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `journal-${dateStr}.md`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    /**
- * Export all entries as JSON
- */
-    async exportAllEntries() {
-        const entries = await this.storage.getEntries();
-        const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `solace-backup-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    /**
-     * Import entries from JSON file
-     * @param {File} file 
-     */
-    async importEntries(file) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const entries = JSON.parse(e.target.result);
-                if (!Array.isArray(entries)) throw new Error('Invalid backup file');
-
-                const result = await this.storage.importEntries(entries);
-                alert(`Imported ${result.completed} entries.`);
-                await this.loadJournal();
-                this.settingsModal.close();
-            } catch (error) {
-                alert('Failed to import: ' + error.message);
-            }
-        };
-        reader.readAsText(file);
     }
 }
