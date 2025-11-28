@@ -27,7 +27,7 @@ export class JournalView {
 
         const journalTitle = document.createElement('h2');
         journalTitle.textContent = 'Journal';
-        journalTitle.style.marginBottom = '20px';
+        journalTitle.className = 'page-title';
 
         // Search Component
         const searchComponent = JournalSearch.create(
@@ -54,7 +54,7 @@ export class JournalView {
         this.calendar = new Calendar(
             [], // Initial entries, will be updated
             (entry) => this.entryDetailModal.open(entry),
-            () => this.callbacks.getFilteredEntries() || []
+            () => this.callbacks.getFilteredEntries()
         );
 
         this.container.appendChild(journalTitle);

@@ -14,7 +14,7 @@ export class SettingsModal {
      * @param {Function} options.onFetchModels - Callback to fetch available models
      * @returns {Object} Modal element and methods
      */
-    static create({ onSave, onClose, initialValues = {}, onFetchModels }) {
+    static create({ onSave, onClose, initialValues = {}, onFetchModels, onModeChange, onThemeToggle, currentMode, currentTheme }) {
         const modal = document.createElement('div');
         modal.id = 'settings-modal';
         modal.className = 'modal';
@@ -154,6 +154,44 @@ export class SettingsModal {
             }
         });
 
+        // --- Appearance Section ---
+        const appearanceTitle = document.createElement('h4');
+        appearanceTitle.textContent = 'Appearance';
+        appearanceTitle.style.marginTop = '20px';
+        appearanceTitle.style.marginBottom = '10px';
+        content.appendChild(appearanceTitle);
+
+        // Theme Select
+        const themeSelect = Input.select({
+            id: 'theme-select',
+            className: 'form-input',
+            value: currentTheme,
+            options: [
+                { value: 'light', text: 'Light' },
+                { value: 'dark', text: 'Dark' }
+            ],
+            onChange: (e) => {
+                if (e.target.value !== currentTheme) {
+                    onThemeToggle();
+                }
+            }
+        });
+        content.appendChild(Input.formGroup('Theme', themeSelect));
+
+        // Assistant Mode Select
+        const assistantModeSelect = Input.select({
+            id: 'assistant-mode-select',
+            className: 'form-input',
+            value: currentMode,
+            options: [
+                { value: 'default', text: 'Default' },
+                { value: 'gratitude', text: 'Gratitude' },
+                { value: 'reflection', text: 'Reflection' }
+            ],
+            onChange: onModeChange
+        });
+        content.appendChild(Input.formGroup('Assistant Mode', assistantModeSelect));
+
         // --- Data Management Section ---
         const dataTitle = document.createElement('h4');
         dataTitle.textContent = 'Data Management';
@@ -268,6 +306,12 @@ export class SettingsModal {
                 }
                 if (values.model !== undefined && !modelSelect.disabled) {
                     modelSelect.value = values.model;
+                }
+                if (values.theme !== undefined) {
+                    themeSelect.value = values.theme;
+                }
+                if (values.mode !== undefined) {
+                    assistantModeSelect.value = values.mode;
                 }
             }
         };

@@ -26,34 +26,12 @@ export class Header {
         const controls = document.createElement('div');
         controls.className = 'header-controls';
 
-        // Mode selector
-        const modeSelect = Input.select({
-            id: 'mode-select',
-            value: currentMode,
-            options: [
-                { value: 'default', text: 'Default' },
-                { value: 'gratitude', text: 'Gratitude' },
-                { value: 'reflection', text: 'Reflection' }
-            ],
-            onChange: onModeChange
-        });
-
         // NEW: End Conversation Button (Tick icon)
         const endConvBtn = Button.icon(
             Icon.render('check'),
             onEndConversation,
             'end-conv-btn',
             'settings-btn' // Re-using settings-btn class for consistent styling
-        );
-        // Add a small margin if needed, or rely on flex gap in CSS
-
-        // Theme Toggle Button
-        const themeIcon = currentTheme === 'dark' ? 'sun' : 'moon';
-        const themeBtn = Button.icon(
-            Icon.render(themeIcon),
-            onThemeToggle,
-            'theme-btn',
-            'settings-btn'
         );
 
         // Settings button
@@ -64,9 +42,7 @@ export class Header {
             'settings-btn'
         );
 
-        controls.appendChild(modeSelect);
-        controls.appendChild(endConvBtn); // Add the new button
-        controls.appendChild(themeBtn); // Add the theme toggle button
+        controls.appendChild(endConvBtn);
         controls.appendChild(settingsBtn);
 
         header.appendChild(logo);

@@ -16,13 +16,13 @@
 
 /* Header */
 header {
-    padding: var(--spacing-xl) var(--spacing-2xl);
+    padding: var(--spacing-lg);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--surface-color);
+    background: var(--bg-color);
     z-index: 10;
-    border-bottom: 1px solid var(--border-color);
+    /* Removed border for minimal look */
     flex-shrink: 0;
 }
 
@@ -47,7 +47,7 @@ main {
 
 .view {
     display: none;
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-lg);
     padding-bottom: 120px;
 }
 
@@ -71,7 +71,7 @@ main {
     bottom: calc(70px + var(--safe-area-bottom));
     left: 0;
     right: 0;
-    padding: var(--spacing-lg) var(--spacing-2xl);
+    padding: var(--spacing-sm) var(--spacing-lg);
     background: linear-gradient(to top, var(--bg-color) 90%, transparent);
     z-index: 5;
 }
@@ -117,7 +117,7 @@ nav {
     display: none;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-lg);
 }
 
 .modal.open {
@@ -191,4 +191,10 @@ nav {
 /* Journal List */
 #journal-list {
     margin-top: var(--spacing-md);
+}
+
+/* Insights Container */
+.insights-container {
+    max-width: 640px;
+    margin: 0 auto;
 }

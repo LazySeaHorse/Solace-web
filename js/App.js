@@ -99,8 +99,20 @@ export class App {
             },
             initialValues: {
                 apiKey: this.storage.getSetting('gemini_api_key') || '',
-                model: this.storage.getSetting('gemini_model') || ''
-            }
+                model: this.storage.getSetting('gemini_model') || '',
+                theme: this.themeManager.getTheme(),
+                mode: this.themeManager.getMode()
+            },
+            onModeChange: (e) => {
+                const mode = e.target.value;
+                this.themeManager.applyMode(mode);
+                this.chatController.setGreeting();
+            },
+            onThemeToggle: () => {
+                this.themeManager.toggleTheme();
+            },
+            currentMode: this.themeManager.getMode(),
+            currentTheme: this.themeManager.getTheme()
         });
     }
 
@@ -148,10 +160,6 @@ export class App {
         // Modals
         app.appendChild(this.settingsModal.element);
         app.appendChild(this.emotionModal.element);
-        // Note: JournalView manages its own EntryDetailModal, but we need to ensure it's in the DOM
-        // The JournalView.render() doesn't append the modal to itself to avoid z-index issues relative to other views?
-        // Actually, modals usually sit at the root.
-        // Let's append the JournalView's modal here.
         app.appendChild(this.journalView.getModalElement());
     }
 
@@ -160,19 +168,16 @@ export class App {
      */
     renderHeader() {
         const newHeader = Header.create({
-            onSettingsClick: () => this.settingsModal.open(),
-            onModeChange: (e) => {
-                const mode = e.target.value;
-                this.themeManager.applyMode(mode);
-                this.chatController.setGreeting();
+            onSettingsClick: () => {
+                this.settingsModal.setValues({
+                    apiKey: this.storage.getSetting('gemini_api_key'),
+                    model: this.storage.getSetting('gemini_model'),
+                    theme: this.themeManager.getTheme(),
+                    mode: this.themeManager.getMode()
+                });
+                this.settingsModal.open();
             },
-            onEndConversation: () => this.emotionModal.open(),
-            onThemeToggle: () => {
-                this.themeManager.toggleTheme();
-                this.renderHeader(); // Re-render to update icon
-            },
-            currentMode: this.themeManager.getMode(),
-            currentTheme: this.themeManager.getTheme()
+            onEndConversation: () => this.emotionModal.open()
         });
 
         if (this.header && this.header.parentNode) {
@@ -194,11 +199,6 @@ export class App {
             if (viewId === 'view-journal') {
                 this.journalController.loadEntries();
                 this.journalController.clearSearch();
-                // We need to clear the search input in the view manually or via controller
-                // The controller.clearSearch() does it logic-wise, but we might need to reset UI
-                // The JournalView re-renders or we can just access the input if needed.
-                // For now, JournalController.clearSearch() reloads entries.
-                // We might want to reset the input value in the DOM.
                 const searchInput = document.getElementById('journal-search');
                 if (searchInput) searchInput.value = '';
             } else if (viewId === 'view-insights') {

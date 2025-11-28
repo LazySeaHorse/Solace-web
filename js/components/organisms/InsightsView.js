@@ -4,10 +4,7 @@ export class InsightsView {
     constructor(getEntriesFn) {
         this.getEntries = getEntriesFn;
         this.element = document.createElement('div');
-        this.element.className = 'view-content';
-        this.element.style.padding = '20px';
-        this.element.style.maxWidth = '800px';
-        this.element.style.margin = '0 auto';
+        this.element.className = 'view-content insights-container';
     }
 
     async render() {
@@ -17,7 +14,7 @@ export class InsightsView {
         // Title
         const title = document.createElement('h2');
         title.textContent = 'Insights';
-        title.style.marginBottom = '24px';
+        title.className = 'page-title';
         this.element.appendChild(title);
 
         if (entries.length === 0) {

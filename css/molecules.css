@@ -448,7 +448,7 @@
 
 /* Logo */
 .logo {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
     letter-spacing: -0.03em;

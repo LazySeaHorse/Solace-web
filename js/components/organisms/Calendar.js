@@ -77,7 +77,8 @@ export class Calendar {
      */
     renderDayView() {
         // Use filtered entries if available, otherwise use all entries
-        const sourceEntries = this.getFilteredEntries ? this.getFilteredEntries() : this.entries;
+        const filtered = this.getFilteredEntries ? this.getFilteredEntries() : null;
+        const sourceEntries = filtered || this.entries;
         const dayEntries = sourceEntries.filter(e =>
             new Date(e.date).toDateString() === this.selectedDate.toDateString()
         );
