@@ -1,4 +1,4 @@
-const CACHE_NAME = 'solace-v1';
+const CACHE_NAME = 'solace-v2';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -11,24 +11,44 @@ const ASSETS_TO_CACHE = [
     './css/calendar.css',
     './js/main.js',
     './js/App.js',
+    // Services
     './js/services/StorageManager.js',
     './js/services/GeminiClient.js',
+    './js/services/Router.js',
+    './js/services/ThemeManager.js',
+    // Controllers
+    './js/controllers/ChatController.js',
+    './js/controllers/JournalController.js',
+    // Views
+    './js/views/ChatView.js',
+    './js/views/JournalView.js',
+    './js/views/InsightsView.js',
+    // Utils
     './js/utils/MarkdownParser.js',
+    // Components - Atoms
     './js/components/atoms/Button.js',
     './js/components/atoms/Icon.js',
     './js/components/atoms/Input.js',
+    // Components - Molecules
     './js/components/molecules/DayEntryList.js',
     './js/components/molecules/InputArea.js',
     './js/components/molecules/JournalEntry.js',
     './js/components/molecules/CalendarGrid.js',
     './js/components/molecules/CalendarHeader.js',
+    './js/components/molecules/JournalSearch.js',
+    './js/components/molecules/SearchResultCard.js',
+    './js/components/molecules/MessageBubble.js',
+    './js/components/molecules/NavItem.js',
+    './js/components/molecules/SuggestionChip.js',
+    // Components - Organisms
     './js/components/organisms/Calendar.js',
     './js/components/organisms/ChatContainer.js',
     './js/components/organisms/EmotionModal.js',
     './js/components/organisms/EntryDetailModal.js',
     './js/components/organisms/Header.js',
     './js/components/organisms/Navigation.js',
-    './js/components/organisms/SettingsModal.js'
+    './js/components/organisms/SettingsModal.js',
+    './js/components/organisms/InsightsView.js'
 ];
 
 // Install event - cache assets
