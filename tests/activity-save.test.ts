@@ -1,0 +1,19 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {saveJournalEntry,mergeActivities} from '../lib/activities.ts';
+import {CATS,validData,normalizeData,type Data,type Entry} from '../lib/memory.ts';
+const e:Entry={id:'e',activityId:'study',title:'Study',date:'2026-11-08',start:600,end:630,type:'actual',category:'productive',icon:'BookOpen',rating:'worthwhile',notes:'Keep'};
+const data=():Data=>({version:1,categories:CATS,activities:[{id:'study',name:'Study',icon:'BookOpen'},{id:'math',name:'Math',icon:'Pencil'}],entries:[e,{...e,id:'e2',category:'distraction'}],timer:{title:'Study',category:'productive',icon:'BookOpen',startedAt:Date.now()-10000,tasks:[{id:'study',title:'Study',category:'productive',icon:'BookOpen',rating:'unrated'}],activeId:'study',segmentStartedAt:Date.now()-10000}});
+test('timeline rename survives persistence and updates linked entries',()=>{const next=saveJournalEntry(data(),{...e,title:'Calculus'});const loaded=normalizeData(JSON.parse(JSON.stringify(next)));assert.ok(validData(loaded));assert.deepEqual(loaded.entries.map(e=>e.title),['Calculus','Calculus']);assert.equal(loaded.activities?.find(a=>a.id==='study')?.name,'Calculus');assert.equal(loaded.timer?.tasks?.[0].title,'Calculus');assert.equal(loaded.entries[0].notes,'Keep')});
+test('case-only edits persist as typed',()=>assert.equal(saveJournalEntry(data(),{...e,title:'STUDY'}).entries.find(x=>x.id==='e')?.title,'STUDY'));
+test('merge preserves contexts, timing, notes and active timer identity',()=>{const original=data(),next=mergeActivities(original,'study','math');assert.equal(next.activities?.length,1);assert.ok(next.entries.every(e=>e.title==='Math'&&e.activityId==='math'));assert.deepEqual(next.entries.map(e=>[e.start,e.end,e.category,e.notes]),original.entries.map(e=>[e.start,e.end,e.category,e.notes]));assert.equal(next.timer?.activeId,'study');assert.equal(next.timer?.tasks?.[0].activityId,'math');assert.ok(validData(next))});
+test('choosing an existing name merges without duplicate suggestions',()=>{const next=saveJournalEntry(data(),{...e,title:'Math'});assert.equal(next.activities?.length,1);assert.ok(next.entries.every(e=>e.activityId==='math'))});
+import {mergeTimelineEntries} from '../lib/activities.ts';
+test('timeline merge spans selected entries, combines notes and leaves other entries alone',()=>{const rows=[e,{...e,id:'b',start:640,end:660,notes:'Second',category:'distraction'},{...e,id:'c',start:700,end:720}];const merged=mergeTimelineEntries(rows,['e','b'],'merged')!;assert.equal(merged.start,600);assert.equal(merged.end,660);assert.equal(merged.notes,'Keep\n\nSecond');assert.equal(merged.activityId,undefined);assert.equal(rows.length,3);assert.equal(merged.id,'merged')});
+test('timeline merge needs two entries on the same day',()=>{assert.equal(mergeTimelineEntries([e],['e'],'merged'),null);assert.equal(mergeTimelineEntries([e,{...e,id:'b',date:'2026-11-09'}],['e','b'],'merged'),null)});
+import {setTimerTaskActivity} from '../lib/activities.ts';
+test('timer activity choice updates session stretches and keeps older history and context',()=>{
+ const d=data(),started=d.timer!.startedAt;const date=new Date(started);const day=new Date(date.getFullYear(),date.getMonth(),date.getDate()).getTime();const start=(started-day)/60000;
+ d.entries=[{...e,id:'past',start:start-60,end:start-30,date:date.toLocaleDateString('en-CA')},{...e,id:'session',date:date.toLocaleDateString('en-CA'),start,end:start+.05,category:'distraction'}];
+ const next=setTimerTaskActivity(d,'study','Math');assert.equal(next.timer!.activeId,'study');assert.equal(next.timer!.tasks![0].activityId,'math');assert.equal(next.timer!.segmentStartedAt,d.timer!.segmentStartedAt);assert.equal(next.entries[0].title,'Study');assert.equal(next.entries[1].title,'Math');assert.equal(next.entries[1].category,'distraction');assert.equal(next.activities?.length,2);
+});

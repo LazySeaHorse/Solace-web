@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {deriveVaultKey,newSalt,seal,unseal} from '../lib/vault.ts';
+import {validEnvelope} from '../lib/vault-format.ts';
+test('password-derived encryption round trip with a non-exportable key',async()=>{const salt=newSalt(),key=await deriveVaultKey('a long private test password',salt);assert.equal(key.extractable,false);const data={entries:[{title:'Private activity',notes:'Never sent as plaintext'}]};const box=await seal(data,key,salt);assert.ok(validEnvelope(box));assert.ok(!JSON.stringify(box).includes('Private activity'));assert.deepEqual(await unseal(box,key),data)});
+test('each save has a new nonce and ciphertext',async()=>{const salt=newSalt(),key=await deriveVaultKey('a long private test password',salt);const a=await seal({a:1},key,salt),b=await seal({a:1},key,salt);assert.notEqual(a.iv,b.iv);assert.notEqual(a.ciphertext,b.ciphertext)});
+test('wrong passwords and changed ciphertext are rejected',async()=>{const salt=newSalt(),key=await deriveVaultKey('a long private test password',salt),wrong=await deriveVaultKey('different private test password',salt);const box=await seal({a:1},key,salt);await assert.rejects(()=>unseal(box,wrong));const damaged={...box,ciphertext:(box.ciphertext[0]==='A'?'B':'A')+box.ciphertext.slice(1)};await assert.rejects(()=>unseal(damaged,key))});
+test('reject unknown format and invalid encryption parameters',()=>{assert.equal(validEnvelope({version:2}),false);assert.equal(validEnvelope({version:1,iterations:1,salt:'a'.repeat(24),iv:'a'.repeat(16),ciphertext:'a'.repeat(40)}),false)});

@@ -1,0 +1,1 @@
+export function BrandMark(){return <svg viewBox="0 0 40 40" className="haff-brand-mark" aria-hidden="true"><path d="M8 24V14c0-7 10-9 14-3 7-5 14-1 14 7v8c0 9-13 9-13 0v-7" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M8 24v7" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><circle cx="25" cy="14" r="1.8" fill="white"/></svg>}
